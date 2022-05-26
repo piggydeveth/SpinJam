@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prestart": "cp ../react-app/src/contracts/hardhat_contracts.json ../backend/contracts/hardhat_contracts.json",
+    "start": "node index.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bnc-notify": "^1.9.5",
+    "ethers": "^5.6.8",
+    "websocket": "^1.0.34"
+  }
+}

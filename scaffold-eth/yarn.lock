@@ -18611,6 +18611,11 @@ react-native-fetch-api@^2.0.0:
   dependencies:
     p-defer "^3.0.0"
 
+react-painter@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/react-painter/-/react-painter-0.4.0.tgz#02cb9db074f4ebefbed643e8c92de147a0e86c14"
+  integrity sha512-GNW5SI4JvRKzHQoMOjekhBirg3dCoRmnM+uBsHlgqFVQ0Flmdp+5dPQXfvZHkC0nqoRUL3xQPfFB3jyC0NT9Kw==
+
 react-qr-reader@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/react-qr-reader/-/react-qr-reader-2.2.1.tgz#dc89046d1c1a1da837a683dd970de5926817d55b"
@@ -22699,7 +22704,7 @@ websocket@1.0.32:
     utf-8-validate "^5.0.2"
     yaeti "^0.0.6"
 
-websocket@^1.0.31:
+websocket@^1.0.31, websocket@^1.0.34:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/websocket/-/websocket-1.0.34.tgz#2bdc2602c08bf2c82253b730655c0ef7dcab3111"
   integrity sha512-PRDso2sGwF6kM75QykIesBijKSVceR6jL2G8NGYyq2XrItNC2P5/qL5XeR056GhA+Ly7JMFvJb9I312mJfmqnQ==

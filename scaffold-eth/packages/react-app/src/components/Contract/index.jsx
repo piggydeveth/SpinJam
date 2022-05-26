@@ -52,7 +52,6 @@ export default function Contract({
   provider,
   name,
   show,
-  price,
   blockExplorer,
   chainId,
   contractConfig,
@@ -122,7 +121,7 @@ export default function Contract({
             {name}
             <div style={{ float: "right" }}>
               <Address value={address} />
-              <Balance address={address} provider={provider} price={price} />
+              <Balance address={address} provider={provider} />
             </div>
           </div>
         }

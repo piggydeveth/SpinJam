@@ -30,8 +30,6 @@ const { utils } = require("ethers");
 **/
 
 export default function Balance(props) {
-  const [dollarMode, setDollarMode] = useState(true);
-
   const balance = useBalance(props.provider, props.address);
   let floatBalance = parseFloat("0.00");
   let usingBalance = balance;
@@ -47,12 +45,6 @@ export default function Balance(props) {
 
   let displayBalance = floatBalance.toFixed(4);
 
-  const price = props.price || props.dollarMultiplier || 1;
-
-  if (dollarMode) {
-    displayBalance = "$" + (floatBalance * price).toFixed(2);
-  }
-
   return (
     <span
       style={{
@@ -60,9 +52,6 @@ export default function Balance(props) {
         fontSize: props.size ? props.size : 24,
         padding: 8,
         cursor: "pointer",
-      }}
-      onClick={() => {
-        setDollarMode(!dollarMode);
       }}
     >
       {displayBalance}
