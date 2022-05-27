@@ -39,9 +39,10 @@ function Game() {
     };
     client.onmessage = msg => {
       console.log("message: ", msg);
-      if (msg.type === "binary") {
+      console.log("message.data: ", msg.data);
+      if (msg.data instanceof Blob) {
         console.log("bin data");
-        setOnionSkin(fileToUrl(msg.binaryData));
+        setOnionSkin(fileToUrl(msg.data));
       }
     };
   }, [client]);

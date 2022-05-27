@@ -176,7 +176,7 @@ export default function FunctionForm({ contractFunction, functionInfo, provider,
     <div style={{ cursor: "pointer", margin: 2 }} key="goButton">
       <Input
         onChange={e => setReturnValue(e.target.value)}
-        defaultValue=""
+        defaultValue="hi"
         bordered={false}
         disabled
         value={returnValue}

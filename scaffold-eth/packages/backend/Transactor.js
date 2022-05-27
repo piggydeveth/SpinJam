@@ -32,23 +32,23 @@ export default function Transactor(providerOrSigner, gasPrice, etherscan) {
 
       let options = null;
       let notify = null;
-      if (navigator.onLine) {
-        options = {
-          dappId: BLOCKNATIVE_DAPPID, // GET YOUR OWN KEY AT https://account.blocknative.com
-          system: "ethereum",
-          networkId: network.chainId,
-          // darkMode: Boolean, // (default: false)
-          transactionHandler: (txInformation) => {
-            if (DEBUG) console.log("HANDLE TX", txInformation);
-            const possibleFunction = callbacks[txInformation.transaction.hash];
-            if (typeof possibleFunction === "function") {
-              possibleFunction(txInformation.transaction);
-            }
-          },
-        };
+      // if (navigator.onLine) {
+      //   options = {
+      //     dappId: BLOCKNATIVE_DAPPID, // GET YOUR OWN KEY AT https://account.blocknative.com
+      //     system: "ethereum",
+      //     networkId: network.chainId,
+      //     // darkMode: Boolean, // (default: false)
+      //     transactionHandler: (txInformation) => {
+      //       if (DEBUG) console.log("HANDLE TX", txInformation);
+      //       const possibleFunction = callbacks[txInformation.transaction.hash];
+      //       if (typeof possibleFunction === "function") {
+      //         possibleFunction(txInformation.transaction);
+      //       }
+      //     },
+      //   };
 
-        notify = Notify(options);
-      }
+      //   notify = Notify(options);
+      // }
 
       let etherscanNetwork = "";
       if (network.name && network.chainId > 1) {
@@ -63,9 +63,11 @@ export default function Transactor(providerOrSigner, gasPrice, etherscan) {
       try {
         let result;
         if (tx instanceof Promise) {
-          if (DEBUG) console.log("AWAITING TX", tx);
+          console.log("AWAITING TX", tx);
           result = await tx;
         } else {
+          console.log("modifying tx", tx);
+
           if (!tx.gasPrice) {
             tx.gasPrice = gasPrice || ethers.utils.parseUnits("4.1", "gwei");
           }

@@ -34,6 +34,14 @@ contract YourContract is ReentrancyGuard, AccessControl {
         oracle = VRFv2Consumer(oracleAddr);
     }
 
+    function getGameToPlayers(uint256 game)
+        public
+        view
+        returns (address[] memory)
+    {
+        return gameToPlayers[game];
+    }
+
     function setSchedule(uint256 _index, uint256 value) public {
         require(!cheaters[msg.sender], "Cheaters can't set schedules");
         require(_index < 2, "index out of bounds");
@@ -128,6 +136,22 @@ contract YourContract is ReentrancyGuard, AccessControl {
             oracle.requestToNums(gameToRequestRandomNumId[gameSchedule[game]]);
     }
 
+    function setTeamsLocalHost(uint256 game) public {
+        require(
+            gameToRequestRandomNumId[gameSchedule[game]] == 0,
+            "teams already set"
+        );
+        gameToRequestRandomNumId[gameSchedule[game]] = block.timestamp;
+    }
+
+    function getTeamsLocalHost(uint256 game) public view returns (uint256) {
+        require(
+            gameToRequestRandomNumId[gameSchedule[game]] != 0,
+            "teams not generated, call setTeams or submit a valid game"
+        );
+        return gameToRequestRandomNumId[gameSchedule[game]];
+    }
+
     function splitSignature(bytes memory sig)
         public
         pure
@@ -174,7 +198,7 @@ contract YourContract is ReentrancyGuard, AccessControl {
         uint256 gameTime,
         string memory _message,
         bytes memory signature
-    ) public pure returns (bool) {
+    ) public view returns (bool) {
         bytes32 messageHash = getMessageHash(gameTime, _message);
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
@@ -201,9 +225,12 @@ contract YourContract is ReentrancyGuard, AccessControl {
 
     function getMessageHash(uint256 gameTime, string memory _message)
         public
-        pure
+        view
         returns (bytes32)
     {
+        console.log("hi");
+        console.log(_message);
+
         return
             keccak256(
                 abi.encodePacked(
