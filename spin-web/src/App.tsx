@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -19,14 +18,14 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 
 const { chains, provider } = configureChains(
-  [chain.mainnet, chain.polygon, chain.optimism, chain.arbitrum],
+  [chain.rinkeby, chain.mainnet],
   [
     alchemyProvider({ alchemyId: process.env.ALCHEMY_ID }),
     publicProvider()
   ]
 );
 const { connectors } = getDefaultWallets({
-  appName: 'My RainbowKit App',
+  appName: 'SpinJam',
   chains
 });
 const wagmiClient = createClient({
@@ -38,9 +37,9 @@ const wagmiClient = createClient({
 function YourApp() {
   return (
     <div className="App">
-      <ConnectButton />
+      <ConnectButton showBalance={false} />
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        ... coming soon
       </header>
     </div>
   );
@@ -48,7 +47,7 @@ function YourApp() {
 const App = () => {
   return (
     <WagmiConfig client={wagmiClient}>
-      <RainbowKitProvider chains={chains}>
+      <RainbowKitProvider coolMode chains={chains}>
         <YourApp />
       </RainbowKitProvider>
     </WagmiConfig>
