@@ -4,13 +4,13 @@ pragma solidity >=0.8.0 <0.9.0;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./VRFv2Consumer.sol";
+import "./SpinJamVRFv2Consumer.sol";
 
 // import "@openzeppelin/contracts/access/Ownable.sol";
 // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
 
-contract YourContract is ReentrancyGuard, AccessControl {
-    VRFv2Consumer oracle;
+contract SpinJamCoordinator is ReentrancyGuard, AccessControl {
+    SpinJamVRFv2Consumer oracle;
     string public purpose = "Building Unstoppable Apps!!!";
     // next game is in 60 secs
     uint256 nextGameTime = 60;
@@ -31,7 +31,7 @@ contract YourContract is ReentrancyGuard, AccessControl {
     mapping(address => bool) public cheaters;
 
     constructor(address oracleAddr) payable {
-        oracle = VRFv2Consumer(oracleAddr);
+        oracle = SpinJamVRFv2Consumer(oracleAddr);
     }
 
     function getGameToPlayers(uint256 game)
@@ -197,7 +197,7 @@ contract YourContract is ReentrancyGuard, AccessControl {
         uint256 gameTime,
         string memory _message,
         bytes memory signature
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         bytes32 messageHash = getMessageHash(gameTime, _message);
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
@@ -224,7 +224,7 @@ contract YourContract is ReentrancyGuard, AccessControl {
 
     function getMessageHash(uint256 gameTime, string memory _message)
         public
-        view
+        pure
         returns (bytes32)
     {
         return

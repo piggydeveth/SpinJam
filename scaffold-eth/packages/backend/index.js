@@ -5,14 +5,15 @@ import http from "http";
 import useStaticJSONRPC from "./useStaticJSONRPC.js";
 import { ethers, providers } from "ethers";
 import { createRequire } from "node:module";
-import Transactor from "./Transactor.js";
 import getContractFuncs from "./getContractFuncs.js";
 import createGifs from "./createGifs.js";
 import fs from "fs";
-import { Blob } from "node:buffer";
+import ipfsAPI from "ipfs-api";
 
 const require = createRequire(import.meta.url);
 const deployedContracts = require("./contracts/hardhat_contracts.json");
+
+const ipfs = ipfsAPI("ipfs.infura.io", "5001", { protocol: "https" });
 
 const NEXT_PICTURE = "NEXT_PICTURE";
 const END_OF_GAME = "END_OF_GAME";
@@ -27,17 +28,17 @@ const cache = {
   gameToTeamInfo: {},
 };
 async function main() {
-  const numOfPicsInGame = 2;
+  const numOfPicsInGame = 5;
   // Spinning the http server and the websocket server.
   const server = http.createServer();
   const wsServer = new webSocketServer({
     httpServer: server,
   });
-  const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+  const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
   const networkOptions = [initialNetwork.name, "mainnet", "rinkeby"];
   const targetNetwork = NETWORKS[networkOptions[0]];
 
-  const contractJSON = deployedContracts[31337].localhost.contracts;
+  const contractJSON = deployedContracts[4].rinkeby.contracts;
   // let localProvider = new ethers.providers.JsonRpcProvider(
   //   targetNetwork.rpcUrl
   // );
@@ -62,14 +63,16 @@ async function main() {
   });
 
   const funcs = {
-    YourCollectible: getContractFuncs(contracts.YourCollectible, signer),
-    VRFv2Consumer: getContractFuncs(contracts.VRFv2Consumer, signer),
-    YourContract: getContractFuncs(contracts.YourContract, signer),
+    SpinJamGIF: getContractFuncs(contracts.SpinJamGIF, signer),
+    SpinJamVRFv2Consumer: getContractFuncs(
+      contracts.SpinJamVRFv2Consumer,
+      signer
+    ),
+    SpinJamCoordinator: getContractFuncs(contracts.SpinJamCoordinator, signer),
   };
 
   let gasPrice = await localProvider.getGasPrice();
-  const tx = Transactor(localProvider, gasPrice);
-
+  console.log("gasPrice", gasPrice);
   //  I'm maintaining all active connections in this object
   const clients = {};
   // {gameID:{userID:[binData,...]}}
@@ -81,7 +84,9 @@ async function main() {
   const fillPlayerCache = async (gameID) => {
     if (!cache.gameToPlayers[gameID]) {
       const players = {};
-      const gameToPlayers = await funcs.YourContract.getGameToPlayers([gameID]);
+      const gameToPlayers = await funcs.SpinJamCoordinator.getGameToPlayers([
+        gameID,
+      ]);
       gameToPlayers.forEach((p) => {
         players[p] = true;
       });
@@ -155,7 +160,8 @@ async function main() {
     return gamePlayersFromCache(gameID);
   };
   const getGameID = async (gameNum) => {
-    return await funcs.YourContract.gameSchedule([gameNum]);
+    console.log("getting game num ", gameNum);
+    return await funcs.SpinJamCoordinator.gameSchedule([gameNum]);
   };
   const validGame = (gameID) => {
     return !!gameID;
@@ -193,13 +199,15 @@ async function main() {
       await request.reject(400, "malformed request. Game should be a number");
       return;
     }
+    console.log("getting game");
+
     const gameID = await getGameID(gameNum);
     if (!validGame(gameID)) {
       console.log("invalid gameNum " + gameNum + "and gameID " + gameID);
       await request.reject(403, "invalid game");
       return;
     }
-
+    console.log("gameID", gameID);
     const userID = queryParams.get("user");
     if (!(await validUser(gameID, userID))) {
       console.log("user '" + userID + "' not allowed in game " + gameID);
@@ -212,6 +220,7 @@ async function main() {
     if (!allDrawings[gameID]) {
       allDrawings[gameID] = {};
     }
+    console.log("userID", userID);
 
     const drawings = allDrawings[gameID];
 
@@ -256,7 +265,7 @@ async function main() {
                 console.log("END_OF_GAME err: ", e);
               }
             });
-            const allDone = true;
+            let allDone = true;
             Object.keys(drawings).forEach((user) => {
               if (drawings[user].length < numOfPicsInGame) {
                 allDone = false;
@@ -271,24 +280,47 @@ async function main() {
                     if (err) {
                       console.log(err);
                     } else {
-                      console.log(data);
-                      Object.keys(gamePlayersFromCache(gameID)).forEach(
-                        (player) => {
-                          console.log("trying to send");
-                          if (clients[player]) {
-                            console.log("sending to player ", player);
-                            clients[player].send(data),
-                              (e) => {
-                                if (e) {
-                                  console.log("error sending gif", e);
-                                } else {
-                                  console.log("sent blob");
-                                }
-                              }
-                            );
-                          }
+                      // ipfs upload
+                      ipfs.files.add(data, function (err, file) {
+                        if (err) {
+                          console.log(err);
+                          return;
                         }
-                      );
+                        console.log(file);
+                        const ipfsUrl = "https://ipfs.io/ipfs/" + file[0].path;
+                        Object.keys(gamePlayersFromCache(gameID)).forEach(
+                          (player) => {
+                            console.log("trying to send");
+                            if (clients[player]) {
+                              console.log("sending to player ", player);
+                              clients[player].send(ipfsUrl, (e) => {
+                                if (e) {
+                                  console.log("error sending ipfsUrl", e);
+                                } else {
+                                  console.log("sent ipfsUrl");
+                                }
+                              });
+                            }
+                          }
+                        );
+                      });
+
+                      // console.log(data);
+                      // Object.keys(gamePlayersFromCache(gameID)).forEach(
+                      //   (player) => {
+                      //     console.log("trying to send");
+                      //     if (clients[player]) {
+                      //       console.log("sending to player ", player);
+                      //       clients[player].send(data, (e) => {
+                      //         if (e) {
+                      //           console.log("error sending gif", e);
+                      //         } else {
+                      //           console.log("sent blob");
+                      //         }
+                      //       });
+                      //     }
+                      //   }
+                      // );
                       // console.log("broadcasting data", data);
                       // wsServer.broadcast(data);
                     }

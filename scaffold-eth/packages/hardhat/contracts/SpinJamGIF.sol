@@ -7,17 +7,12 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract YourCollectible is
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    Ownable
-{
+contract SpinJamGIF is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     string _contractURI;
     Counters.Counter private _tokenIdCounter;
 
-    constructor(string memory contractsURI) ERC721("YourCollectible", "YCB") {
+    constructor(string memory contractsURI) ERC721("SpinJamGIF", "YCB") {
         _contractURI = contractsURI;
     }
 

@@ -77,16 +77,14 @@ function Game() {
         console.log("waiting", waiting);
         const fileUrl = fileToUrl(msg.data);
         console.log("new file", fileUrl);
-        if (endOfGame) {
-          setGifSources(s => [...s, fileUrl]);
-        } else {
-          setNextOnionSkin(fileUrl);
-        }
+        setNextOnionSkin(fileUrl);
       } else if (msg.data === END_OF_GAME) {
         console.log("end of game");
         setEndOfGame(true);
       } else if (msg.data instanceof String && msg.data == WAITING_FOR_PLAYER) {
         console.log("waiting for picture");
+      } else if (msg.data.includes("ipfs.io/ipfs")) {
+        setGifSources(s => [...s, msg.data]);
       } else {
         console.log(JSON.stringify(msg.data));
         console.log("not recognized message");

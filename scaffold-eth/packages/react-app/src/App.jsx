@@ -30,7 +30,7 @@ import Game from "./views/Game";
 const { ethers } = require("ethers");
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 const NETWORKCHECK = true;
 const USE_BURNER_WALLET = true; // toggle burner wallet feature
@@ -206,7 +206,7 @@ function App(props) {
             return (
               <>
                 <Contract
-                  name="YourContract"
+                  name="SpinJamCoordinator"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
@@ -214,7 +214,7 @@ function App(props) {
                   contractConfig={contractConfig}
                 />
                 <Contract
-                  name="YourCollectible"
+                  name="SpinJamGIF"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
@@ -222,7 +222,7 @@ function App(props) {
                   contractConfig={contractConfig}
                 />
                 <Contract
-                  name="VRFv2Consumer"
+                  name="SpinJamVRFv2Consumer"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
