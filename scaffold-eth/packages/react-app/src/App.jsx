@@ -30,7 +30,7 @@ import Game from "./views/Game";
 const { ethers } = require("ethers");
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const initialNetwork = NETWORKS.rinkeby; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 const NETWORKCHECK = true;
 const USE_BURNER_WALLET = true; // toggle burner wallet feature
@@ -141,8 +141,8 @@ function App(props) {
         <Menu.Item key="/">
           <Link to="/">App Home</Link>
         </Menu.Item>
-        <Menu.Item key="/debug">
-          <Link to="/debug">Debug Contracts</Link>
+        <Menu.Item key="/contracts">
+          <Link to="/contracts">Contracts</Link>
         </Menu.Item>
         <Menu.Item key="/game">
           <Link to="/game">Game</Link>
@@ -187,7 +187,7 @@ function App(props) {
           </div>
           {/* <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} /> */}
         </Route>
-        <Route exact path="/debug">
+        <Route exact path="/contracts">
           {/*
                 🎛 this scaffolding is full of commonly used components
                 this <Contract/> component will automatically parse your ABI
@@ -206,7 +206,7 @@ function App(props) {
             return (
               <>
                 <Contract
-                  name="YourContract"
+                  name="SpinJamCoordinator"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
@@ -214,7 +214,7 @@ function App(props) {
                   contractConfig={contractConfig}
                 />
                 <Contract
-                  name="YourCollectible"
+                  name="SpinJamGIF"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
@@ -222,7 +222,7 @@ function App(props) {
                   contractConfig={contractConfig}
                 />
                 <Contract
-                  name="VRFv2Consumer"
+                  name="SpinJamVRFv2Consumer"
                   signer={userSigner}
                   provider={localProvider}
                   address={address}
