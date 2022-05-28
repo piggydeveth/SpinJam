@@ -141,8 +141,8 @@ function App(props) {
         <Menu.Item key="/">
           <Link to="/">App Home</Link>
         </Menu.Item>
-        <Menu.Item key="/debug">
-          <Link to="/debug">Debug Contracts</Link>
+        <Menu.Item key="/contracts">
+          <Link to="/contracts">Contracts</Link>
         </Menu.Item>
         <Menu.Item key="/game">
           <Link to="/game">Game</Link>
@@ -187,7 +187,7 @@ function App(props) {
           </div>
           {/* <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} /> */}
         </Route>
-        <Route exact path="/debug">
+        <Route exact path="/contracts">
           {/*
                 🎛 this scaffolding is full of commonly used components
                 this <Contract/> component will automatically parse your ABI

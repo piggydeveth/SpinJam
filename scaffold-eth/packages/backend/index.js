@@ -288,6 +288,7 @@ async function main() {
                         }
                         console.log(file);
                         const ipfsUrl = "https://ipfs.io/ipfs/" + file[0].path;
+                        console.log("ipfsUrl", ipfsUrl);
                         Object.keys(gamePlayersFromCache(gameID)).forEach(
                           (player) => {
                             console.log("trying to send");
