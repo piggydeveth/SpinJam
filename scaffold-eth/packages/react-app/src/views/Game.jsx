@@ -102,6 +102,7 @@ function Game() {
     return (
       <div>
         <p>End of Game</p>
+        <p>Minting to ipfs</p>
         <Button
           onClick={() => {
             client.close();

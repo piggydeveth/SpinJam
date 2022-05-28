@@ -105,7 +105,7 @@ export default function Ramp(props) {
             shape="round"
             onClick={() => {
               new RampInstantSDK({
-                hostAppName: "scaffold-eth",
+                hostAppName: "SpinJam",
                 hostLogoUrl: "https://scaffoldeth.io/scaffold-eth.png",
                 swapAmount: "100000000000000000", // 0.1 ETH in wei  ?
                 swapAsset: "ETH",
