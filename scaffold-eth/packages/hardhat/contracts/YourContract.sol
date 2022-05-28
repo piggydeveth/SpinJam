@@ -103,7 +103,6 @@ contract YourContract is ReentrancyGuard, AccessControl {
         );
         address[] memory players = gameToPlayers[gameSchedule[game]];
         for (uint256 i = 0; i < players.length; i++) {
-            console.log("player[i]", players[i]);
             if (msg.sender == players[i]) {
                 gameToPlayers[gameSchedule[game]][i] = address(0);
                 payable(msg.sender).transfer(costToPlay);
@@ -228,9 +227,6 @@ contract YourContract is ReentrancyGuard, AccessControl {
         view
         returns (bytes32)
     {
-        console.log("hi");
-        console.log(_message);
-
         return
             keccak256(
                 abi.encodePacked(

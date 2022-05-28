@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Canvas from "../components/Game/Canvas";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
+import { Button } from "antd";
 
+const END_OF_GAME = "END_OF_GAME";
+const WAITING_FOR_PLAYER = "WAITING_FOR_PLAYER";
 function Game() {
-  const connectToClient = (user, game) => {
-    var url = new URL("ws://127.0.0.1:8000");
-    url.searchParams.append("user", user);
-    url.searchParams.append("game", game);
-    return new W3CWebSocket(url.toString());
-  };
-
+  const [waiting, setWaiting] = useState(false);
   const [user, setUser] = useState("");
+  const [needToGrabNextPicture, setNeedToGrabNextPicture] = useState(false);
   const [gameId, setGameId] = useState("");
   const [client, setClient] = useState(null);
-  const [picSourceNames, setPicSourceNames] = useState([]);
+  const [endOfGame, setEndOfGame] = useState(false);
   const [onionSkin, setOnionSkin] = useState("");
+  const [nextOnionSkin, setNextOnionSkin] = useState("");
   const [gifSource, setGifSource] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [gifSources, setGifSources] = useState([]);
   const fileToUrl = file => {
     const url = window.URL || window.webkitURL;
     try {
@@ -24,9 +25,36 @@ function Game() {
       return "";
     }
   };
+
+  const connectToClient = (user, game) => {
+    setClient(null);
+    setConnected(false);
+    console.log(client, connected);
+    var url = new URL("ws://127.0.0.1:8000");
+    url.searchParams.append("user", user);
+    url.searchParams.append("game", game);
+    return new W3CWebSocket(url.toString());
+  };
+
+  const grabNextPic = () => {
+    if (nextOnionSkin) {
+      setOnionSkin(nextOnionSkin);
+      setNextOnionSkin("");
+      setWaiting(false);
+    }
+  };
+
   useEffect(() => {
     console.log("client change", client);
+    console.log("connected", connected);
+    console.log("connected && client", connected && client);
     if (client === null) {
+      console.log("null client");
+      setEndOfGame(false);
+      setWaiting(false);
+      setConnected(false);
+      setOnionSkin("");
+      setNextOnionSkin("");
       return;
     }
 
@@ -37,12 +65,24 @@ function Game() {
     client.onopen = () => {
       console.log("WebSocket Client Connected");
     };
+    client.onError = e => {
+      console.log("error: ", e);
+    };
     client.onmessage = msg => {
+      setConnected(true);
       console.log("message: ", msg);
       console.log("message.data: ", msg.data);
       if (msg.data instanceof Blob) {
         console.log("bin data");
-        setOnionSkin(fileToUrl(msg.data));
+        console.log("waiting", waiting);
+        setNextOnionSkin(fileToUrl(msg.data));
+      } else if (msg.data === END_OF_GAME) {
+        console.log("end of game");
+        setEndOfGame(true);
+      } else if (msg.data instanceof String && msg.data == WAITING_FOR_PLAYER) {
+        console.log("waiting for picture");
+      } else {
+        console.log("not recognized message");
       }
     };
   }, [client]);
@@ -50,31 +90,106 @@ function Game() {
   const handleSubmit = event => {
     event.preventDefault();
     setClient(connectToClient(user, gameId));
+    console.log(client, connected);
   };
 
-  return client ? (
-    <div>
-      <img src={gifSource.length ? gifSource[0] : ""} alt="" />
-      <Canvas
-        onionSkin={onionSkin}
-        submit={blob => {
-          client.send(blob);
-        }}
-      />
-    </div>
+  const EndOfGame = () => {
+    return (
+      <div>
+        <p>End of Game</p>
+        <Button
+          onClick={() => {
+            client.close();
+            setClient(null);
+          }}
+        >
+          start new game
+        </Button>
+        {gifSources.map((gif, i) => (
+          <img src={gif} key={i} />
+        ))}
+      </div>
+    );
+  };
+
+  const ConnectToWS = () => {
+    return (
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="game">Game id:</label>
+        <br />
+        <input type="text" id="game" name="game" value={gameId} onChange={e => setGameId(e.target.value)} />
+        <br />
+        <label htmlFor="user">User:</label>
+        <br />
+        <input type="text" id="user" name="user" value={user} onChange={e => setUser(e.target.value)} />
+        <br />
+        <br />
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  };
+
+  const ChangingConnection = () => {
+    return (
+      <div>
+        <p>Changing connection status</p>
+        <Button
+          onClick={() => {
+            client.close();
+            setClient(null);
+          }}
+        >
+          abort connection
+        </Button>
+      </div>
+    );
+  };
+
+  const GamePlay = ({ waiting, grabNextPic, submit }) => {
+    useEffect(() => {
+      console.log("waiting change to", waiting);
+    }, [waiting]);
+    return (
+      <div>
+        <img src={gifSource.length ? gifSource[0] : ""} alt="" />
+        {waiting ? (
+          <div>
+            <p>Waiting for next pic</p>
+            {needToGrabNextPicture ? <Button onClick={grabNextPic}>Get next picture</Button> : <></>}
+          </div>
+        ) : (
+          <Canvas
+            onionSkin={onionSkin}
+            submit={blob => {
+              submit(blob);
+            }}
+          />
+        )}
+      </div>
+    );
+  };
+
+  return endOfGame ? (
+    <EndOfGame />
+  ) : client === null ? (
+    <ConnectToWS />
+  ) : client !== null && !connected ? (
+    <ChangingConnection />
   ) : (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="game">Game id:</label>
-      <br />
-      <input type="text" id="game" name="game" value={gameId} onChange={e => setGameId(e.target.value)} />
-      <br />
-      <label htmlFor="user">User:</label>
-      <br />
-      <input type="text" id="user" name="user" value={user} onChange={e => setUser(e.target.value)} />
-      <br />
-      <br />
-      <input type="submit" value="Submit" />
-    </form>
+    <GamePlay
+      waiting={waiting}
+      submit={blob => {
+        if (nextOnionSkin) {
+          setOnionSkin(nextOnionSkin);
+          setNextOnionSkin("");
+        } else {
+          setNeedToGrabNextPicture(true);
+          setWaiting(true);
+        }
+        client.send(blob);
+      }}
+      grabNextPic={grabNextPic}
+    />
   );
 }
 

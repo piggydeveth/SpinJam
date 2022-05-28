@@ -7,9 +7,15 @@ import { ethers, providers } from "ethers";
 import { createRequire } from "node:module";
 import Transactor from "./Transactor.js";
 import getContractFuncs from "./getContractFuncs.js";
+import createGifs from "./createGifs.js";
+import fs from "fs";
 
 const require = createRequire(import.meta.url);
 const deployedContracts = require("./contracts/hardhat_contracts.json");
+
+const NEXT_PICTURE = "NEXT_PICTURE";
+const END_OF_GAME = "END_OF_GAME";
+const WAITING_FOR_PLAYER = "WAITING_FOR_PLAYER";
 
 const webSocketsServerPort = 8000;
 const webSocketServer = wss.server;
@@ -20,6 +26,7 @@ const cache = {
   gameToTeamInfo: {},
 };
 async function main() {
+  const numOfPicsInGame = 2;
   // Spinning the http server and the websocket server.
   const server = http.createServer();
   const wsServer = new webSocketServer({
@@ -64,7 +71,8 @@ async function main() {
 
   //  I'm maintaining all active connections in this object
   const clients = {};
-  const drawings = {};
+  // {gameID:{userID:[binData,...]}}
+  const allDrawings = {};
   const games = [];
 
   // todo: connect to network and get info from contract
@@ -134,8 +142,13 @@ async function main() {
   };
 
   const nextPlayer = (team, userID) => {
-    return team[userID];
+    let next = team[userID];
+    while (!clients[next] && next != userID) {
+      next = team[next];
+    }
+    return next;
   };
+
   const rsvpers = async (gameID) => {
     await fillPlayerCache(gameID);
     return gamePlayersFromCache(gameID);
@@ -150,6 +163,14 @@ async function main() {
     return (await rsvpers(gameID))[userID];
   };
   // -----------------
+
+  const reverseList = (list) => {
+    var copy = {};
+    Object.keys(list).forEach((k) => {
+      copy[list[k]] = k;
+    });
+    return copy;
+  };
 
   let queryParams = new URLSearchParams("");
   wsServer.on("request", async function (request) {
@@ -187,6 +208,11 @@ async function main() {
       );
       return;
     }
+    if (!allDrawings[gameID]) {
+      allDrawings[gameID] = {};
+    }
+
+    const drawings = allDrawings[gameID];
 
     const playersToTeam = 5;
     const players = await gamePlayersFromCache(gameID);
@@ -195,10 +221,11 @@ async function main() {
     const teamInfo = getCachedTeamInfo(gameID);
     const teams = getCachedTeams(teamInfo);
     const myTeam = teams[getMyTeamI(teamInfo, userID)];
+    const myReverseTeam = reverseList(teams[getMyTeamI(teamInfo, userID)]);
 
     // You can rewrite this part of the code to accept only the requests from allowed origin
     const connection = request.accept(null, request.origin);
-
+    clients[userID] = connection;
     wsServer.broadcast("user " + userID + " joined");
 
     connection.on("close", function (connection) {
@@ -207,10 +234,12 @@ async function main() {
       // delete drawings[userID];
     });
 
-    connection.on("message", function (msg) {
+    connection.on("message", async function (msg) {
+      console.log(msg.type);
+      console.log(msg);
       switch (msg.type) {
-        case "string":
-          console.log(msg.type);
+        case "utf8":
+          console.log("utf8");
           break;
         case "binary":
           console.log("bin data");
@@ -218,20 +247,75 @@ async function main() {
             drawings[userID] = [];
           }
           drawings[userID].push(msg.binaryData);
-
-          clients[nextPlayer(myTeam, userID)].send(msg.binaryData, (e) => {
-            if (e) {
-              console.log("err: ", e);
-            }
-          });
           console.log("num of pics", drawings[userID].length);
+          if (drawings[userID].length >= numOfPicsInGame) {
+            console.log("end of game!");
+            connection.send(END_OF_GAME, (e) => {
+              if (e) {
+                console.log("END_OF_GAME err: ", e);
+              }
+            });
+            const allDone = true;
+            Object.keys(drawings).forEach((user) => {
+              if (drawings[user].length < numOfPicsInGame) {
+                allDone = false;
+              }
+            });
+            if (allDone) {
+              const gifs = await createGifs(drawings);
+              console.log("created gif2s", gifs);
+              gifs.forEach(
+                async (gifFile) =>
+                  fs.readFile(gifFile, async (err, data) => {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      Object.keys(gamePlayersFromCache(gameID)).forEach(
+                        (player) => {
+                          console.log("trying to send");
+                          if (clients[player]) {
+                            console.log("sending to player ", player);
+                            clients[player].send(data, (e) => {
+                              if (e) {
+                                console.log("error sending gif", e);
+                              }
+                            });
+                          }
+                        }
+                      );
+                      // console.log("broadcasting data", data);
+                      // wsServer.broadcast(data);
+                    }
+                  })
+                // wsServer.broadcast(
+                //   await new Promise((resolve, reject) => {
+                //     fs.readFile(gifFile, (err, data) => {
+                //       if (err) {
+                //         reject(err);
+                //       } else {
+                //         resolve(data);
+                //       }
+                //     });
+                //   })
+                // )
+              );
+            }
+          } else {
+            let nextClient = clients[nextPlayer(myTeam, userID)];
+            nextClient.sendBytes(msg.binaryData, (e) => {
+              if (e) {
+                console.log("err: ", e);
+              }
+            });
+          }
+
           break;
         default:
-          console.log(msg.type);
+          console.log("unrecognized msg type", msg.type);
+          console.log(msg);
       }
     });
 
-    clients[userID] = connection;
     console.log(
       "connected: " + userID + " in " + Object.getOwnPropertyNames(clients)
     );
