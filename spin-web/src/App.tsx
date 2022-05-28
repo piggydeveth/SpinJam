@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -40,7 +39,7 @@ function YourApp() {
     <div className="App">
       <ConnectButton showBalance={false} />
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        ... coming soon
       </header>
     </div>
   );
