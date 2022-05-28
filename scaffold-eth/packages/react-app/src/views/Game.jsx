@@ -14,7 +14,6 @@ function Game() {
   const [endOfGame, setEndOfGame] = useState(false);
   const [onionSkin, setOnionSkin] = useState("");
   const [nextOnionSkin, setNextOnionSkin] = useState("");
-  const [gifSource, setGifSource] = useState([]);
   const [connected, setConnected] = useState(false);
   const [gifSources, setGifSources] = useState([]);
   const fileToUrl = file => {
@@ -55,6 +54,7 @@ function Game() {
       setConnected(false);
       setOnionSkin("");
       setNextOnionSkin("");
+      setGifSources([]);
       return;
     }
 
@@ -75,13 +75,20 @@ function Game() {
       if (msg.data instanceof Blob) {
         console.log("bin data");
         console.log("waiting", waiting);
-        setNextOnionSkin(fileToUrl(msg.data));
+        const fileUrl = fileToUrl(msg.data);
+        console.log("new file", fileUrl);
+        if (endOfGame) {
+          setGifSources(s => [...s, fileUrl]);
+        } else {
+          setNextOnionSkin(fileUrl);
+        }
       } else if (msg.data === END_OF_GAME) {
         console.log("end of game");
         setEndOfGame(true);
       } else if (msg.data instanceof String && msg.data == WAITING_FOR_PLAYER) {
         console.log("waiting for picture");
       } else {
+        console.log(JSON.stringify(msg.data));
         console.log("not recognized message");
       }
     };
@@ -151,7 +158,6 @@ function Game() {
     }, [waiting]);
     return (
       <div>
-        <img src={gifSource.length ? gifSource[0] : ""} alt="" />
         {waiting ? (
           <div>
             <p>Waiting for next pic</p>

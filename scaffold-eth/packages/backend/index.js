@@ -9,6 +9,7 @@ import Transactor from "./Transactor.js";
 import getContractFuncs from "./getContractFuncs.js";
 import createGifs from "./createGifs.js";
 import fs from "fs";
+import { Blob } from "node:buffer";
 
 const require = createRequire(import.meta.url);
 const deployedContracts = require("./contracts/hardhat_contracts.json");
@@ -270,16 +271,21 @@ async function main() {
                     if (err) {
                       console.log(err);
                     } else {
+                      console.log(data);
                       Object.keys(gamePlayersFromCache(gameID)).forEach(
                         (player) => {
                           console.log("trying to send");
                           if (clients[player]) {
                             console.log("sending to player ", player);
-                            clients[player].send(data, (e) => {
-                              if (e) {
-                                console.log("error sending gif", e);
+                            clients[player].send(data),
+                              (e) => {
+                                if (e) {
+                                  console.log("error sending gif", e);
+                                } else {
+                                  console.log("sent blob");
+                                }
                               }
-                            });
+                            );
                           }
                         }
                       );
